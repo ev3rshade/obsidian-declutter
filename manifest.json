@@ -1,0 +1,9 @@
+{
+  "id": "clean-tracker",
+  "name": "Clean Tracker",
+  "version": "0.1.0",
+  "minAppVersion": "1.0.0",
+  "description": "Clean tracker plugin.",
+  "author": "ev3rshade",
+  "isDesktopOnly": false
+}
