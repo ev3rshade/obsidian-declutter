@@ -1,0 +1,8 @@
+# Fixture vault: build output and state Obsidian writes while it's open
+fixtures/vault/.obsidian/plugins/
+fixtures/vault/.obsidian/workspace.json
+fixtures/vault/.obsidian/workspace-mobile.json
+fixtures/vault/.obsidian/appearance.json
+fixtures/vault/.obsidian/hotkeys.json
+fixtures/vault/.obsidian/core-plugins-migration.json
+fixtures/vault/.trash/
