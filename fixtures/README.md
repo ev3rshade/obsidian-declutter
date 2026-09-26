@@ -1,23 +1,23 @@
 # Fixture vault
 
-`vault/` is a small Obsidian vault seeded with the kinds of clutter Clean Tracker should find.
+`vault/` is a mock Obsidian vault seeded different types of clutter Clean Tracker should track.
 
-## Usage
+## How to Use Fixtures for Testing
 
 ```sh
 scripts/install-fixture.sh          # copy main.js/manifest.json (and styles.css if present) into the vault
 scripts/install-fixture.sh --reset  # first discard any changes made to the vault, then install
 ```
 
-Then open `fixtures/vault` as a vault in Obsidian and enable community plugins. The build is gitignored, so it's never committed.
+Open `fixtures/vault` as a vault in Obsidian and enable community plugins.
 
 Well-formatted notes follow `Templates/Note Template.md`: frontmatter with `date` and `tags`, an H1 matching the filename, and a `## References` section.
 
-## Seeded issues
+## Clutter Seeded in Vault
 
-### Orphans (no incoming links)
+### Orphan (no incoming links) + Inbox Notes
 
-| Note | Notes |
+| Note | Problem |
 | --- | --- |
 | `Notes/Orphan Idea.md` | No links in or out |
 | `Notes/Archive/Old Orphan.md` | Has an outgoing link but no backlinks; nested folder |
@@ -25,11 +25,10 @@ Well-formatted notes follow `Templates/Note Template.md`: frontmatter with `date
 | `Inbox/Untitled.md` | Empty file; also in the inbox |
 | `Templates/Note Template.md` | Orphan only because it's a template. Should **not** be flagged |
 
-`Home.md` is the hub. Everything else is linked from somewhere.
 
 ### Broken links
 
-| In | Link | Kind |
+| In | Link | Problem |
 | --- | --- | --- |
 | `Notes/Garden Plan.md` | `[[Compost Guide]]` | Missing note |
 | `Notes/Reading List.md` | `[[Missing Book\|…]]` | Missing note, with alias |
