@@ -25,5 +25,8 @@
     "obsidian": "^1.14.4",
     "typescript": "^7.0.2",
     "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "chart.js": "^4.5.1"
   }
 }
