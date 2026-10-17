@@ -2,8 +2,8 @@
 
 import type { Rule } from "./rules-api.ts"
 
-const rule: Rule = {
+const ALL_NOTES: Rule = {
   name: "All notes",
   filter: () => true,
 };
-export default rule;
+export default ALL_NOTES;
