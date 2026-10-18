@@ -3,6 +3,7 @@ import allNotes from "../rules/all-notes";
 import orphan from "../rules/orphan";
 import { countMatches } from "./count";
 import { buildVaultContext } from "./vault";
+import { parseHistory } from "./history";
 import { PLOT_VIEW, PlotView } from "./plot";
 
 export default class CleanTrackerPlugin extends Plugin {
@@ -16,6 +17,10 @@ export default class CleanTrackerPlugin extends Plugin {
 
       const total = countMatches(allNotes, files, vault, getCache);
       const orphans = countMatches(orphan, files, vault, getCache);
+      const counts = { [allNotes.name]: total, [orphan.name]: orphans };
+
+      const snapshots = parseHistory(await this.loadData());
+      await this.saveData({ snapshots: [...snapshots, { time: Date.now(), counts }] });
 
       const message = `Total files: ${total}\nOrphan files: ${orphans}`;
       console.log(message);
@@ -25,7 +30,7 @@ export default class CleanTrackerPlugin extends Plugin {
       if (!leaf) return;
       await leaf.setViewState({ type: PLOT_VIEW });
       this.app.workspace.revealLeaf(leaf);
-      (leaf.view as PlotView).plot({ [allNotes.name]: total, [orphan.name]: orphans });
+      (leaf.view as PlotView).plot(counts);
     });
   }
 
