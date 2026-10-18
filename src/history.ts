@@ -19,6 +19,19 @@ export function parseHistory(raw: unknown): Snapshot[] {
   return raw.snapshots as Snapshot[];
 }
 
+// One series of (time, count) points per rule, in snapshot order
+export function seriesByRule(snapshots: Snapshot[]): Map<string, { x: number; y: number }[]> {
+  const series = new Map<string, { x: number; y: number }[]>();
+  for (const { time, counts } of snapshots) {
+    for (const [rule, count] of Object.entries(counts)) {
+      const points = series.get(rule) ?? [];
+      points.push({ x: time, y: count });
+      series.set(rule, points);
+    }
+  }
+  return series;
+}
+
 function isSnapshot(value: unknown): boolean {
   return (
     isRecord(value) &&

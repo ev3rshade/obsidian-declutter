@@ -19,8 +19,8 @@ export default class CleanTrackerPlugin extends Plugin {
       const orphans = countMatches(orphan, files, vault, getCache);
       const counts = { [allNotes.name]: total, [orphan.name]: orphans };
 
-      const snapshots = parseHistory(await this.loadData());
-      await this.saveData({ snapshots: [...snapshots, { time: Date.now(), counts }] });
+      const snapshots = [...parseHistory(await this.loadData()), { time: Date.now(), counts }];
+      await this.saveData({ snapshots });
 
       const message = `Total files: ${total}\nOrphan files: ${orphans}`;
       console.log(message);
@@ -30,7 +30,7 @@ export default class CleanTrackerPlugin extends Plugin {
       if (!leaf) return;
       await leaf.setViewState({ type: PLOT_VIEW });
       this.app.workspace.revealLeaf(leaf);
-      (leaf.view as PlotView).plot(counts);
+      (leaf.view as PlotView).plot(snapshots);
     });
   }
 
