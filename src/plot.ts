@@ -9,6 +9,10 @@ const DAY_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short" });
 const ROW_HEIGHT = 48;
 const AXIS_HEIGHT = 24;
 const BORDER = "1px solid var(--background-modifier-border)";
+// Chart.js's default palette, set by hand because its automatic colors
+// plugin turns off once any dataset picks its own fill
+const COLORS = ["54, 162, 235", "255, 99, 132", "255, 159, 64", "255, 205, 86", "75, 192, 192", "153, 102, 255", "201, 203, 207"];
+const FILL_OPACITY = 0.12;
 
 // PlotView is a sidebar view that plots each rule's count over time as a
 // stacked area chart, with time running up the y axis so the newest snapshot
@@ -63,11 +67,16 @@ export class PlotView extends ItemView {
       data: {
         // Chart.js's "stack" fill shades toward the bottom even when time is on
         // the y axis, so fill each layer to the one before it instead
-        datasets: [...seriesByRule(snapshots)].map(([rule, points], i) => ({
-          label: rule,
-          data: points,
-          fill: i === 0 ? "origin" : "-1",
-        })),
+        datasets: [...seriesByRule(snapshots)].map(([rule, points], i) => {
+          const color = COLORS[i % COLORS.length];
+          return {
+            label: rule,
+            data: points,
+            fill: i === 0 ? "origin" : "-1",
+            borderColor: `rgb(${color})`,
+            backgroundColor: `rgba(${color}, ${FILL_OPACITY})`,
+          };
+        }),
       },
       options: {
         indexAxis: "y",
