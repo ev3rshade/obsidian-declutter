@@ -136,6 +136,9 @@ export class PlotView extends ItemView {
     const cursor = event.clientY - scroller.getBoundingClientRect().top;
     const anchor = (scroller.scrollTop + cursor) / plotContainer.offsetHeight;
     plotContainer.style.height = `${rows * this.rowHeight}px`;
+    // Redraw at the new height now rather than on Chart.js's next resize
+    // frame, which would briefly show the old plot at the new scroll position
+    this.chart?.resize();
     scroller.scrollTop = anchor * plotContainer.offsetHeight - cursor;
   }
 
