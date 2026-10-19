@@ -6,8 +6,9 @@ export const PLOT_VIEW = "clean-tracker-plot";
 
 const TIME_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" });
 
-// PlotView is a sidebar view that plots each rule's count over time.
-// The x axis is linear over epoch milliseconds because Chart.js's time axis
+// PlotView is a sidebar view that plots each rule's count over time, with
+// time running up the y axis so the newest snapshot is on top.
+// The y axis is linear over epoch milliseconds because Chart.js's time axis
 // needs a separate date adapter package.
 export class PlotView extends ItemView {
   private chart: Chart | null = null;
@@ -30,11 +31,12 @@ export class PlotView extends ItemView {
         datasets: [...seriesByRule(snapshots)].map(([rule, points]) => ({ label: rule, data: points })),
       },
       options: {
+        indexAxis: "y",
         scales: {
-          x: { type: "linear", ticks: { callback: (time) => TIME_FORMAT.format(Number(time)) } },
+          y: { type: "linear", ticks: { callback: (time) => TIME_FORMAT.format(Number(time)) } },
         },
         plugins: {
-          tooltip: { callbacks: { title: ([item]) => TIME_FORMAT.format(Number(item.parsed.x)) } },
+          tooltip: { callbacks: { title: ([item]) => TIME_FORMAT.format(Number(item.parsed.y)) } },
         },
       },
     });

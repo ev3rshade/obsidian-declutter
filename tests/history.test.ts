@@ -31,8 +31,8 @@ describe("seriesByRule", () => {
       { time: 1000, counts: { "All notes": 10, orphan: 2 } },
       { time: 2000, counts: { "All notes": 12, orphan: 1 } },
     ]);
-    expect(series.get("All notes")).toEqual([{ x: 1000, y: 10 }, { x: 2000, y: 12 }]);
-    expect(series.get("orphan")).toEqual([{ x: 1000, y: 2 }, { x: 2000, y: 1 }]);
+    expect(series.get("All notes")).toEqual([{ x: 10, y: 1000 }, { x: 12, y: 2000 }]);
+    expect(series.get("orphan")).toEqual([{ x: 2, y: 1000 }, { x: 1, y: 2000 }]);
   });
 
   it("starts a rule's series at the first snapshot that counted it", () => {
@@ -40,6 +40,6 @@ describe("seriesByRule", () => {
       { time: 1000, counts: { "All notes": 10 } },
       { time: 2000, counts: { "All notes": 12, orphan: 1 } },
     ]);
-    expect(series.get("orphan")).toEqual([{ x: 2000, y: 1 }]);
+    expect(series.get("orphan")).toEqual([{ x: 1, y: 2000 }]);
   });
 });
