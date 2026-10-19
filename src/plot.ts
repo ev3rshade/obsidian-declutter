@@ -39,6 +39,7 @@ export class PlotView extends ItemView {
       },
       options: {
         indexAxis: "y",
+        interaction: { mode: "nearest", axis: "y", intersect: false },
         scales: {
           x: { stacked: true, beginAtZero: true },
           y: { type: "linear", ticks: { callback: (time) => TIME_FORMAT.format(Number(time)) } },
