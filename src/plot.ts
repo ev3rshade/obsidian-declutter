@@ -46,6 +46,7 @@ export class PlotView extends ItemView {
         indexAxis: "y",
         maintainAspectRatio: false,
         interaction: { mode: "nearest", axis: "y", intersect: false },
+        datasets: { line: { cubicInterpolationMode: "monotone", pointRadius: 0 } },
         scales: {
           x: { stacked: true, beginAtZero: true },
           y: { type: "linear", ticks: { callback: (time) => TIME_FORMAT.format(Number(time)) } },
