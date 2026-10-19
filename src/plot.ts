@@ -52,6 +52,8 @@ export class PlotView extends ItemView {
           x: { stacked: true, beginAtZero: true, position: "top" },
           y: {
             type: "linear",
+            // End the axis at the first and last snapshots rather than at rounded ticks
+            bounds: "data",
             grid: { display: false },
             border: { display: false },
             afterBuildTicks: (scale) => {
