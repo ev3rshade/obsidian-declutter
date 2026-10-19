@@ -31,8 +31,8 @@ export class PlotView extends ItemView {
     const container = this.contentEl.createDiv();
     container.style.position = "relative";
     container.style.height = `${Math.max(300, snapshots.length * ROW_HEIGHT)}px`;
-    const canvas = container.createEl("canvas");
-    this.chart = new Chart(canvas, {
+    const legend = this.contentEl.createDiv();
+    this.chart = new Chart(container.createEl("canvas"), {
       type: "line",
       data: {
         // Chart.js's "stack" fill shades toward the bottom even when time is on
@@ -63,25 +63,49 @@ export class PlotView extends ItemView {
           },
         },
         plugins: {
-          legend: {
-            labels: {
-              usePointStyle: true,
-              pointStyle: "circle",
-              // Layers fill at half opacity, so take the dot's fill from the solid line color
-              generateLabels: (chart) =>
-                Chart.defaults.plugins.legend.labels
-                  .generateLabels(chart)
-                  .map((label) => ({ ...label, fillStyle: label.strokeStyle })),
-            },
-          },
+          legend: { display: false },
           tooltip: { callbacks: { title: ([item]) => TIME_FORMAT.format(Number(item.parsed.y)) } },
         },
       },
     });
+
+    renderLegend(legend, this.chart);
   }
 
   async onClose() {
     this.chart?.destroy();
+  }
+}
+
+// renderLegend lists each rule as a dot in its line color, and clicking a rule
+// hides or shows its layer like Chart.js's own legend
+function renderLegend(el: HTMLElement, chart: Chart) {
+  el.empty();
+  el.setCssStyles({ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "var(--size-4-3)" });
+  for (const label of Chart.defaults.plugins.legend.labels.generateLabels(chart)) {
+    const entry = el.createDiv();
+    entry.setCssStyles({
+      display: "flex",
+      alignItems: "center",
+      gap: "var(--size-4-1)",
+      cursor: "pointer",
+      fontSize: "var(--font-ui-small)",
+      textDecoration: label.hidden ? "line-through" : "none",
+    });
+    const dot = entry.createSpan();
+    dot.setCssStyles({
+      width: "10px",
+      height: "10px",
+      borderRadius: "50%",
+      background: String(label.strokeStyle),
+    });
+    entry.createSpan({ text: label.text });
+    entry.onclick = () => {
+      const i = label.datasetIndex!;
+      chart.setDatasetVisibility(i, !chart.isDatasetVisible(i));
+      chart.update();
+      renderLegend(el, chart);
+    };
   }
 }
 
