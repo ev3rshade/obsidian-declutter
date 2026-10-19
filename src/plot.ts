@@ -5,6 +5,7 @@ import { seriesByRule, type Snapshot } from "./history";
 export const PLOT_VIEW = "clean-tracker-plot";
 
 const TIME_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" });
+const ROW_HEIGHT = 48;
 
 // PlotView is a sidebar view that plots each rule's count over time as a
 // stacked area chart, with time running up the y axis so the newest snapshot
@@ -25,7 +26,11 @@ export class PlotView extends ItemView {
   plot(snapshots: Snapshot[]) {
     this.chart?.destroy();
     this.contentEl.empty();
-    const canvas = this.contentEl.createEl("canvas");
+    // The plot grows downward one row per snapshot, so the view scrolls
+    const container = this.contentEl.createDiv();
+    container.style.position = "relative";
+    container.style.height = `${Math.max(300, snapshots.length * ROW_HEIGHT)}px`;
+    const canvas = container.createEl("canvas");
     this.chart = new Chart(canvas, {
       type: "line",
       data: {
@@ -39,6 +44,7 @@ export class PlotView extends ItemView {
       },
       options: {
         indexAxis: "y",
+        maintainAspectRatio: false,
         interaction: { mode: "nearest", axis: "y", intersect: false },
         scales: {
           x: { stacked: true, beginAtZero: true },
