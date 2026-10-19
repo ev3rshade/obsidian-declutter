@@ -7,6 +7,7 @@ export const PLOT_VIEW = "clean-tracker-plot";
 const TIME_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" });
 const DAY_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short" });
 const ROW_HEIGHT = 48;
+const MAX_ROW_HEIGHT = 480;
 const AXIS_HEIGHT = 24;
 const BORDER = "1px solid var(--background-modifier-border)";
 // Chart.js's default palette, set by hand because its automatic colors
@@ -21,8 +22,10 @@ const FILL_OPACITY = 0.12;
 // needs a separate date adapter package.
 // Chart.js can't pin one axis while the rest of a chart scrolls, so the count
 // axis labels are HTML placed from the plot's own scale.
+// Ctrl or Cmd with the wheel, or a trackpad pinch, zooms the time axis.
 export class PlotView extends ItemView {
   private chart: Chart | null = null;
+  private rowHeight = ROW_HEIGHT;
 
   getViewType() {
     return PLOT_VIEW;
@@ -57,8 +60,11 @@ export class PlotView extends ItemView {
     const plotContainer = scroller.createDiv();
     plotContainer.setCssStyles({
       position: "relative",
-      height: `${snapshots.length * ROW_HEIGHT}px`,
+      height: `${snapshots.length * this.rowHeight}px`,
       minHeight: "100%",
+    });
+    scroller.addEventListener("wheel", (event) => this.zoom(event, scroller, plotContainer, snapshots.length), {
+      passive: false,
     });
     const legend = this.contentEl.createDiv();
 
@@ -115,6 +121,22 @@ export class PlotView extends ItemView {
     });
 
     renderLegend(legend, this.chart);
+  }
+
+  // zoom scales the rows by the wheel's movement, keeping the time under the
+  // cursor in place. Zooming out stops once the plot fits the view.
+  private zoom(event: WheelEvent, scroller: HTMLElement, plotContainer: HTMLElement, rows: number) {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    const minRowHeight = scroller.clientHeight / rows;
+    this.rowHeight = Math.min(
+      Math.max(this.rowHeight * Math.exp(-event.deltaY / 200), minRowHeight),
+      MAX_ROW_HEIGHT,
+    );
+    const cursor = event.clientY - scroller.getBoundingClientRect().top;
+    const anchor = (scroller.scrollTop + cursor) / plotContainer.offsetHeight;
+    plotContainer.style.height = `${rows * this.rowHeight}px`;
+    scroller.scrollTop = anchor * plotContainer.offsetHeight - cursor;
   }
 
   async onClose() {
