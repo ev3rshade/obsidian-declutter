@@ -57,6 +57,17 @@ export class PlotView extends ItemView {
           },
         },
         plugins: {
+          legend: {
+            labels: {
+              usePointStyle: true,
+              pointStyle: "circle",
+              // Layers fill at half opacity, so take the dot's fill from the solid line color
+              generateLabels: (chart) =>
+                Chart.defaults.plugins.legend.labels
+                  .generateLabels(chart)
+                  .map((label) => ({ ...label, fillStyle: label.strokeStyle })),
+            },
+          },
           tooltip: { callbacks: { title: ([item]) => TIME_FORMAT.format(Number(item.parsed.y)) } },
         },
       },
