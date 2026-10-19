@@ -82,7 +82,7 @@ export class PlotView extends ItemView {
         indexAxis: "y",
         maintainAspectRatio: false,
         interaction: { mode: "nearest", axis: "y", intersect: false },
-        datasets: { line: { cubicInterpolationMode: "monotone", pointRadius: 0 } },
+        datasets: { line: { cubicInterpolationMode: "monotone", pointRadius: 0, borderWidth: 1 } },
         scales: {
           // The axis strip shows the count labels, so the plot keeps only the gridlines
           x: {
