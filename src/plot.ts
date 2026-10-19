@@ -45,18 +45,11 @@ export class PlotView extends ItemView {
       borderRadius: "var(--radius-s)",
       overflow: "hidden",
     });
-    // Both parts reserve the scrollbar's width so the axis lines up with the plot
     const axis = box.createDiv();
-    axis.setCssStyles({
-      position: "relative",
-      flexShrink: "0",
-      height: `${AXIS_HEIGHT}px`,
-      borderBottom: BORDER,
-      overflowY: "hidden",
-      scrollbarGutter: "stable",
-    });
+    axis.setCssStyles({ position: "relative", flexShrink: "0", height: `${AXIS_HEIGHT}px`, borderBottom: BORDER });
+    // The plot still scrolls, just without a visible scrollbar
     const scroller = box.createDiv();
-    scroller.setCssStyles({ flex: "1", minHeight: "0", overflowY: "auto", scrollbarGutter: "stable" });
+    scroller.setCssStyles({ flex: "1", minHeight: "0", overflowY: "auto", scrollbarWidth: "none" });
     const plotContainer = scroller.createDiv();
     plotContainer.setCssStyles({
       position: "relative",
