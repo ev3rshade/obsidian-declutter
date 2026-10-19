@@ -5,6 +5,7 @@ import { seriesByRule, type Snapshot } from "./history";
 export const PLOT_VIEW = "clean-tracker-plot";
 
 const TIME_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" });
+const DAY_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short" });
 const ROW_HEIGHT = 48;
 
 // PlotView is a sidebar view that plots each rule's count over time as a
@@ -53,7 +54,10 @@ export class PlotView extends ItemView {
             type: "linear",
             grid: { display: false },
             border: { display: false },
-            ticks: { callback: (time) => TIME_FORMAT.format(Number(time)) },
+            afterBuildTicks: (scale) => {
+              scale.ticks = dayStarts(snapshots).map((time) => ({ value: time }));
+            },
+            ticks: { callback: (time) => DAY_FORMAT.format(Number(time)) },
           },
         },
         plugins: {
@@ -77,4 +81,14 @@ export class PlotView extends ItemView {
   async onClose() {
     this.chart?.destroy();
   }
+}
+
+// The time of each local day's first snapshot, so the time axis gets one label per day
+function dayStarts(snapshots: Snapshot[]): number[] {
+  const starts = new Map<string, number>();
+  for (const { time } of snapshots) {
+    const day = DAY_FORMAT.format(time);
+    if (!starts.has(day)) starts.set(day, time);
+  }
+  return [...starts.values()];
 }
