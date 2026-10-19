@@ -48,8 +48,13 @@ export class PlotView extends ItemView {
         interaction: { mode: "nearest", axis: "y", intersect: false },
         datasets: { line: { cubicInterpolationMode: "monotone", pointRadius: 0 } },
         scales: {
-          x: { stacked: true, beginAtZero: true },
-          y: { type: "linear", ticks: { callback: (time) => TIME_FORMAT.format(Number(time)) } },
+          x: { stacked: true, beginAtZero: true, position: "top" },
+          y: {
+            type: "linear",
+            grid: { display: false },
+            border: { display: false },
+            ticks: { callback: (time) => TIME_FORMAT.format(Number(time)) },
+          },
         },
         plugins: {
           tooltip: { callbacks: { title: ([item]) => TIME_FORMAT.format(Number(item.parsed.y)) } },
