@@ -9,6 +9,7 @@ const DAY_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short" });
 const ROW_HEIGHT = 48;
 const MAX_ROW_HEIGHT = 480;
 const AXIS_HEIGHT = 24;
+const DAY_LABEL_GAP = 6;
 const BORDER = "1px solid var(--background-modifier-border)";
 // Chart.js's default palette, set by hand because its automatic colors
 // plugin turns off once any dataset picks its own fill
@@ -21,7 +22,9 @@ const FILL_OPACITY = 0.12;
 // The y axis is linear over epoch milliseconds because Chart.js's time axis
 // needs a separate date adapter package.
 // Chart.js can't pin one axis while the rest of a chart scrolls, so the count
-// axis labels are HTML placed from the plot's own scale.
+// axis labels are HTML placed from the plot's own scale. The time axis takes
+// no width so the plot's base sits at the box's left edge, and instead each
+// day is a line across the plot broken by its date.
 // Ctrl or Cmd with the wheel, or a trackpad pinch, zooms the time axis.
 export class PlotView extends ItemView {
   private chart: Chart | null = null;
@@ -53,7 +56,14 @@ export class PlotView extends ItemView {
       overflow: "hidden",
     });
     const axis = box.createDiv();
-    axis.setCssStyles({ position: "relative", flexShrink: "0", height: `${AXIS_HEIGHT}px`, borderBottom: BORDER });
+    axis.setCssStyles({
+      position: "relative",
+      flexShrink: "0",
+      height: `${AXIS_HEIGHT}px`,
+      borderBottom: BORDER,
+      color: "var(--text-muted)",
+      fontSize: "var(--font-ui-smaller)",
+    });
     // The plot still scrolls, just without a visible scrollbar
     const scroller = box.createDiv();
     scroller.setCssStyles({ flex: "1", minHeight: "0", overflowY: "auto", scrollbarWidth: "none" });
@@ -67,6 +77,7 @@ export class PlotView extends ItemView {
       passive: false,
     });
     const legend = this.contentEl.createDiv();
+    const textStyle = getComputedStyle(axis);
 
     this.chart = new Chart(plotContainer.createEl("canvas"), {
       type: "line",
@@ -87,6 +98,9 @@ export class PlotView extends ItemView {
       options: {
         indexAxis: "y",
         maintainAspectRatio: false,
+        // The oldest day's line is the plot's bottom edge, so leave room for
+        // the lower half of its date
+        layout: { padding: { bottom: parseFloat(textStyle.fontSize) / 2 } },
         interaction: { mode: "nearest", axis: "y", intersect: false },
         datasets: { line: { cubicInterpolationMode: "monotone", pointRadius: 0, borderWidth: 1 } },
         scales: {
@@ -108,7 +122,7 @@ export class PlotView extends ItemView {
             afterBuildTicks: (scale) => {
               scale.ticks = dayStarts(snapshots).map((time) => ({ value: time }));
             },
-            ticks: { callback: (time) => DAY_FORMAT.format(Number(time)) },
+            ticks: { display: false },
           },
         },
         plugins: {
@@ -117,7 +131,10 @@ export class PlotView extends ItemView {
         },
       },
       // Relabel the axis whenever the plot's count range or width changes
-      plugins: [{ id: "countAxis", afterLayout: (chart) => renderCountAxis(axis, chart) }],
+      plugins: [
+        { id: "countAxis", afterLayout: (chart) => renderCountAxis(axis, chart) },
+        { id: "dayLabels", afterDraw: (chart) => drawDayLabels(chart, textStyle) },
+      ],
     });
 
     renderLegend(legend, this.chart);
@@ -158,14 +175,42 @@ function renderCountAxis(el: HTMLElement, chart: Chart) {
       position: "absolute",
       top: "50%",
       transform: "translateY(-50%)",
-      color: "var(--text-muted)",
-      fontSize: "var(--font-ui-smaller)",
       whiteSpace: "nowrap",
     });
     const width = label.offsetWidth;
     const left = scale.getPixelForValue(tick.value) - width / 2;
     label.style.left = `${Math.min(Math.max(left, 0), el.clientWidth - width)}px`;
   }
+}
+
+// drawDayLabels draws each day as a line across the plot with its date
+// centered on it, like ---- date ----, in the count axis's text style and
+// the gridlines' color
+function drawDayLabels(chart: Chart, style: CSSStyleDeclaration) {
+  const { ctx, chartArea } = chart;
+  const scale = chart.scales.y;
+  const center = (chartArea.left + chartArea.right) / 2;
+  ctx.save();
+  ctx.fillStyle = style.color;
+  ctx.strokeStyle = String(Chart.defaults.borderColor);
+  ctx.lineWidth = 1;
+  ctx.font = `${style.fontSize} ${style.fontFamily}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  for (const tick of scale.ticks) {
+    const text = DAY_FORMAT.format(tick.value);
+    // Center the line on a pixel so it stays 1px sharp
+    const y = Math.round(scale.getPixelForValue(tick.value)) + 0.5;
+    const half = ctx.measureText(text).width / 2 + DAY_LABEL_GAP;
+    ctx.beginPath();
+    ctx.moveTo(chartArea.left, y);
+    ctx.lineTo(center - half, y);
+    ctx.moveTo(center + half, y);
+    ctx.lineTo(chartArea.right, y);
+    ctx.stroke();
+    ctx.fillText(text, center, y);
+  }
+  ctx.restore();
 }
 
 // renderLegend lists each rule as a dot in its line color, and clicking a rule
