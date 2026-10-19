@@ -7,12 +7,16 @@ export const PLOT_VIEW = "clean-tracker-plot";
 const TIME_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short", timeStyle: "short" });
 const DAY_FORMAT = new Intl.DateTimeFormat(undefined, { dateStyle: "short" });
 const ROW_HEIGHT = 48;
+const AXIS_HEIGHT = 24;
+const BORDER = "1px solid var(--background-modifier-border)";
 
 // PlotView is a sidebar view that plots each rule's count over time as a
 // stacked area chart, with time running up the y axis so the newest snapshot
 // is on top.
 // The y axis is linear over epoch milliseconds because Chart.js's time axis
 // needs a separate date adapter package.
+// Chart.js can't pin one axis while the rest of a chart scrolls, so the count
+// axis labels are HTML placed from the plot's own scale.
 export class PlotView extends ItemView {
   private chart: Chart | null = null;
 
@@ -27,12 +31,41 @@ export class PlotView extends ItemView {
   plot(snapshots: Snapshot[]) {
     this.chart?.destroy();
     this.contentEl.empty();
-    // The plot grows downward one row per snapshot, so the view scrolls
-    const container = this.contentEl.createDiv();
-    container.style.position = "relative";
-    container.style.height = `${Math.max(300, snapshots.length * ROW_HEIGHT)}px`;
+    this.contentEl.setCssStyles({ display: "flex", flexDirection: "column", gap: "var(--size-4-2)" });
+
+    // A bordered box fills the view, with the count axis fixed at its top and
+    // the plot scrolling beneath it, one row per snapshot
+    const box = this.contentEl.createDiv();
+    box.setCssStyles({
+      flex: "1",
+      minHeight: "0",
+      display: "flex",
+      flexDirection: "column",
+      border: BORDER,
+      borderRadius: "var(--radius-s)",
+      overflow: "hidden",
+    });
+    // Both parts reserve the scrollbar's width so the axis lines up with the plot
+    const axis = box.createDiv();
+    axis.setCssStyles({
+      position: "relative",
+      flexShrink: "0",
+      height: `${AXIS_HEIGHT}px`,
+      borderBottom: BORDER,
+      overflowY: "hidden",
+      scrollbarGutter: "stable",
+    });
+    const scroller = box.createDiv();
+    scroller.setCssStyles({ flex: "1", minHeight: "0", overflowY: "auto", scrollbarGutter: "stable" });
+    const plotContainer = scroller.createDiv();
+    plotContainer.setCssStyles({
+      position: "relative",
+      height: `${snapshots.length * ROW_HEIGHT}px`,
+      minHeight: "100%",
+    });
     const legend = this.contentEl.createDiv();
-    this.chart = new Chart(container.createEl("canvas"), {
+
+    this.chart = new Chart(plotContainer.createEl("canvas"), {
       type: "line",
       data: {
         // Chart.js's "stack" fill shades toward the bottom even when time is on
@@ -49,7 +82,15 @@ export class PlotView extends ItemView {
         interaction: { mode: "nearest", axis: "y", intersect: false },
         datasets: { line: { cubicInterpolationMode: "monotone", pointRadius: 0 } },
         scales: {
-          x: { stacked: true, beginAtZero: true, position: "top" },
+          // The axis strip shows the count labels, so the plot keeps only the gridlines
+          x: {
+            stacked: true,
+            beginAtZero: true,
+            position: "top",
+            ticks: { display: false },
+            grid: { drawTicks: false },
+            border: { display: false },
+          },
           y: {
             type: "linear",
             // End the axis at the first and last snapshots rather than at rounded ticks
@@ -67,6 +108,8 @@ export class PlotView extends ItemView {
           tooltip: { callbacks: { title: ([item]) => TIME_FORMAT.format(Number(item.parsed.y)) } },
         },
       },
+      // Relabel the axis whenever the plot's count range or width changes
+      plugins: [{ id: "countAxis", afterLayout: (chart) => renderCountAxis(axis, chart) }],
     });
 
     renderLegend(legend, this.chart);
@@ -74,6 +117,27 @@ export class PlotView extends ItemView {
 
   async onClose() {
     this.chart?.destroy();
+  }
+}
+
+// renderCountAxis puts each of the plot's count ticks above its gridline,
+// nudging the end labels inward so they stay inside the strip
+function renderCountAxis(el: HTMLElement, chart: Chart) {
+  el.empty();
+  const scale = chart.scales.x;
+  for (const tick of scale.ticks) {
+    const label = el.createSpan({ text: String(tick.label) });
+    label.setCssStyles({
+      position: "absolute",
+      top: "50%",
+      transform: "translateY(-50%)",
+      color: "var(--text-muted)",
+      fontSize: "var(--font-ui-smaller)",
+      whiteSpace: "nowrap",
+    });
+    const width = label.offsetWidth;
+    const left = scale.getPixelForValue(tick.value) - width / 2;
+    label.style.left = `${Math.min(Math.max(left, 0), el.clientWidth - width)}px`;
   }
 }
 
