@@ -1,6 +1,7 @@
 import { Plugin, Notice } from "obsidian";
 import allNotes from "../rules/all-notes";
 import orphan from "../rules/orphan";
+import noTemplate from "../rules/no-template";
 import { countMatches } from "./count";
 import { buildVaultContext } from "./vault";
 import { parseHistory } from "./history";
@@ -17,12 +18,13 @@ export default class CleanTrackerPlugin extends Plugin {
 
       const total = countMatches(allNotes, files, vault, getCache);
       const orphans = countMatches(orphan, files, vault, getCache);
-      const counts = { [allNotes.name]: total, [orphan.name]: orphans };
+      const untemplated = countMatches(noTemplate, files, vault, getCache);
+      const counts = { [allNotes.name]: total, [orphan.name]: orphans, [noTemplate.name]: untemplated };
 
       const snapshots = [...parseHistory(await this.loadData()), { time: Date.now(), counts }];
       await this.saveData({ snapshots });
 
-      const message = `Total files: ${total}\nOrphan files: ${orphans}`;
+      const message = `Total files: ${total}\nOrphan files: ${orphans}\nFiles without a template: ${untemplated}`;
       console.log(message);
       new Notice(message);
 

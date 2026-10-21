@@ -7,6 +7,6 @@ import { indexLinks } from "../src/vault";
 describe("all-notes", () => {
   it("matches every file", () => {
     const files = [{ path: "a.md" }, { path: "b.md" }, { path: "c.md" }] as any;
-    expect(countMatches(ALL_NOTES, files, indexLinks({}))).toBe(3);
+    expect(countMatches(ALL_NOTES, files, { ...indexLinks({}), templates: [] })).toBe(3);
   });
 });
